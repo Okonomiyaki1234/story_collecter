@@ -1,3 +1,77 @@
+
+# 創作進捗＆あらすじ集
+
+## 目的
+
+自作創作の進捗状況やあらすじ、キャラクター情報などを一元管理・共有するアプリです。
+
+---
+
+## 記録したい情報
+
+### 作品（story）
+- タイトル
+- あらすじ
+- 本文（改行対応）
+- 状況（例：企画段階／プロット段階／下書き中／執筆中／完成など）
+- 開始時期（物語中の）
+- 開始時期（リアルでの活動開始）
+
+### キャラクター（character）
+- キャラクター名
+- 生年月日
+- 利き手
+- 血液型
+- 家族構成（辞書型配列）
+- プロフィール自由記述
+- 性別
+
+### 役割・関係性（role）
+- 所属
+- 年齢
+- 身長
+- 体重
+- その時点の人間関係（辞書型配列）
+- 作品紐づけ自由記述プロフィール
+- 紐づく作品ID（story_id）
+- 紐づくキャラクターID（character_id）
+
+### ユーザープロファイル（profiles）
+- Auth管理用（Supabase Auth）
+
+---
+
+## テーブル案
+
+| テーブル名   | 主なカラム例・説明 |
+|--------------|-------------------|
+| profiles     | id, email, ...（Supabase Auth管理用） |
+| story        | id, title, summary, body, status, start_in_story, start_in_real, created_at, updated_at |
+| character    | id, name, birthday, handedness, blood_type, family (json), profile, gender |
+| role         | id, story_id, character_id, affiliation, age, height, weight, relations (json), story_profile |
+
+---
+
+## 備考・提案
+- 作品とキャラクターは多対多の関係なので、中間テーブルとしてroleを設ける設計は妥当です。
+- "状況"や"性別"などはenum型で管理すると良いでしょう。
+- "家族構成"や"人間関係"は柔軟性を持たせるためjson型（辞書型配列）で保存するのが便利です。
+- 作品の本文は長文・改行対応のtext型推奨。
+- 追加で記録したい要素があれば随時拡張可能な設計です。
+
+---
+
+## 今後の実装予定
+- Supabase Authによるユーザー管理
+- Supabase Databaseとの連携
+- 編集・追加・削除機能
+- 閲覧権限の管理
+
+---
+
+（このREADMEは設計メモとして随時更新してください）
+
+---
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started

@@ -1,6 +1,8 @@
-
+"use client";
 import Header from '../components/Header';
+import Footer from '../components/Footer';
 import { supabase } from '../lib/supabaseClient';
+import { useEffect, useState } from 'react';
 
 type Story = {
   id: string;
@@ -31,7 +33,7 @@ async function getCharacters(): Promise<Character[]> {
   // キャラクターと紐づくストーリータイトルをrole経由で取得
   const { data, error } = await supabase
     .from('character')
-    .select(`id, name, image_url, role:role(character_id), role(story:story(title))`)
+    .select(`id, name, image_url, role:role(story:story(title))`)
     .order('updated_at', { ascending: false })
     .limit(5);
   if (!data) return [];
@@ -44,9 +46,34 @@ async function getCharacters(): Promise<Character[]> {
   }));
 }
 
-export default async function Home() {
-  const stories = await getStories();
-  const characters = await getCharacters();
+
+import React from 'react';
+
+export default function Home() {
+  const [stories, setStories] = useState<Story[]>([]);
+  const [characters, setCharacters] = useState<Character[]>([]);
+  const [user, setUser] = useState<any>(null);
+  const [role, setRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      setStories(await getStories());
+      setCharacters(await getCharacters());
+      const { data } = await supabase.auth.getSession();
+      const currentUser = data.session?.user ?? null;
+      setUser(currentUser);
+      if (currentUser) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", currentUser.id)
+          .single();
+        setRole(profile?.role ?? null);
+      } else {
+        setRole(null);
+      }
+    })();
+  }, []);
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-black flex flex-col items-center pt-0 px-4">
@@ -114,8 +141,14 @@ export default async function Home() {
       <div className="flex flex-wrap gap-4 mt-8">
         <a href="/stories" className="px-4 py-2 rounded bg-zinc-200 dark:bg-zinc-700 text-black dark:text-zinc-50 font-semibold">ストーリー一覧へ</a>
         <a href="/characters" className="px-4 py-2 rounded bg-zinc-200 dark:bg-zinc-700 text-black dark:text-zinc-50 font-semibold">キャラクター一覧へ</a>
-        <a href="/stories/new" className="px-4 py-2 rounded bg-zinc-300 text-zinc-700 font-semibold cursor-not-allowed opacity-60" tabIndex={-1} aria-disabled>ストーリーを追加（要ログイン）</a>
+        {user && role === "user" && (
+          <a href="/stories/new" className="px-4 py-2 rounded bg-zinc-300 text-zinc-700 font-semibold">ストーリーを追加</a>
+        )}
+        {user && role === "user" && (
+          <a href="/characters/new" className="px-4 py-2 rounded bg-zinc-300 text-zinc-700 font-semibold">キャラクターを追加</a>
+        )}
       </div>
+      <Footer />
     </div>
   );
 }

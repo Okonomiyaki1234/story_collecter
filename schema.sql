@@ -20,6 +20,7 @@ CREATE TABLE story (
 CREATE TABLE character (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name text NOT NULL,
+  read text, -- ひらがな読み仮名
   birthday date,
   handedness text,
   blood_type text,

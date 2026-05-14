@@ -18,6 +18,7 @@
 
 ### キャラクター（character）
 - キャラクター名
+- 読み仮名（ひらがな）
 - 生年月日
 - 利き手
 - 血液型
@@ -46,7 +47,7 @@
 |--------------|-------------------|
 | profiles     | id, email, ...（Supabase Auth管理用） |
 | story        | id, title, summary, body, status, start_in_story, start_in_real, image_url, created_at, updated_at |
-| character    | id, name, birthday, handedness, blood_type, family (json), profile, gender, image_url, updated_at |
+| character    | id, name, read, birthday, handedness, blood_type, family (json), profile, gender, image_url, updated_at |
 | role         | id, story_id, character_id, affiliation, age, height, weight, relations (json), story_profile, updated_at |
 
 ---

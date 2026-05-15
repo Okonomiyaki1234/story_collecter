@@ -3,8 +3,14 @@ import Header from '../../../components/Header';
 import Footer from '../../../components/Footer';
 import { supabase } from '../../../lib/supabaseClient';
 import { useEffect, useState } from 'react';
+interface CharacterOption {
+  id: string;
+  name: string;
+  image_url: string | null;
+}
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import FamilyEditor from '../../../components/FamilyEditor';
 
 interface Character {
   id: string;
@@ -36,6 +42,17 @@ export default function CharacterDetailPage() {
   const [role, setRole] = useState<string | null>(null);
   const [editData, setEditData] = useState<Partial<Character>>({});
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
+  const [characterOptions, setCharacterOptions] = useState<CharacterOption[]>([]);
+  // キャラクター選択肢取得
+  useEffect(() => {
+    supabase
+      .from('character')
+      .select('id, name, image_url')
+      .order('name', { ascending: true })
+      .then(({ data, error }) => {
+        if (!error && data) setCharacterOptions(data);
+      });
+  }, []);
 
   useEffect(() => {
     if (!id) return;
@@ -75,8 +92,22 @@ export default function CharacterDetailPage() {
     })();
   }, [id]);
 
+  // familyArr: 編集用配列、family: DB保存用（辞書型）
+  const [familyArr, setFamilyArr] = useState<{ type: string; name: string }[]>([]);
+  // familyArrは編集用stateとして直接使い、editData.familyからの同期は初回のみ、または編集モード切替時のみ行う
+  // ここではuseEffectを削除し、familyArrは消さない
+
   const handleEditChange = (field: keyof Character, value: any) => {
-    setEditData((prev) => ({ ...prev, [field]: value }));
+    if (field === 'family') {
+      setEditData((prev) => ({ ...prev, family: value }));
+    } else {
+      setEditData((prev) => ({ ...prev, [field]: value }));
+    }
+  };
+
+  // familyArrの変更時はstateのみ更新、保存時に変換
+  const handleFamilyArrChange = (arr: { type: string; name: string }[]) => {
+    setFamilyArr(arr);
   };
 
   const handleSave = async () => {
@@ -178,6 +209,54 @@ export default function CharacterDetailPage() {
             ) : (
               <div className="text-xs text-zinc-500 dark:text-zinc-400 mb-1">生年月日: {character.birthday || '-'}</div>
             )}
+            {/* 家族構成編集UI or 閲覧UI */}
+            {editMode ? (
+              <div className="mt-2">
+                <label className="block text-xs mb-1">家族構成</label>
+                <FamilyEditor
+                  value={familyArr}
+                  onChange={handleFamilyArrChange}
+                  characterOptions={characterOptions}
+                  selfId={character.id}
+                />
+              </div>
+            ) : (
+              <div className="mt-2">
+                <label className="block text-xs mb-1">家族構成</label>
+                {(() => {
+                  // familyは { 続柄: 名前 } の辞書型 or null
+                  const fam: [string, string][] = character.family && typeof character.family === 'object' && !Array.isArray(character.family)
+                    ? Object.entries(character.family) as [string, string][]
+                    : [];
+                  if (!fam.length) return <div className="text-zinc-400 text-xs">家族情報なし</div>;
+                  // 名前→キャラ情報逆引き
+                  const nameToChar: Record<string, CharacterOption> = Object.fromEntries(characterOptions.map(c => [c.name, c]));
+                  return (
+                    <div className="flex flex-wrap gap-3 mt-1">
+                      {fam.map(([type, name]) => {
+                        const charName = String(name);
+                        const c = nameToChar[charName];
+                        return (
+                          <div key={type+charName} className="flex items-center gap-2 px-3 py-2 rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-sm">
+                            <div className="w-10 h-10 flex items-center justify-center bg-zinc-100 dark:bg-zinc-800 rounded overflow-hidden">
+                              {c?.image_url ? (
+                                <img src={c.image_url} alt="img" className="object-cover w-full h-full" />
+                              ) : (
+                                <span className="text-xs text-zinc-400">no image</span>
+                              )}
+                            </div>
+                            <div>
+                              <div className="text-xs font-bold text-black dark:text-zinc-50">{charName}</div>
+                              <div className="text-xs text-zinc-500 dark:text-zinc-400">{type}</div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
             {editMode ? (
               <input
                 className="text-xs text-zinc-500 dark:text-zinc-400 mb-1 bg-zinc-100 dark:bg-zinc-800 rounded px-2 py-1 w-full"
@@ -222,31 +301,6 @@ export default function CharacterDetailPage() {
           ) : (
             <div className="whitespace-pre-line text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-800 rounded p-4 min-h-[60px]">
               {character.profile || <span className="text-zinc-400">（プロフィールなし）</span>}
-            </div>
-          )}
-        </div>
-        <div className="mt-6">
-          <h2 className="text-xl font-semibold mb-2 text-black dark:text-zinc-50">家族構成</h2>
-          {editMode ? (
-            <textarea
-              className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-800 rounded p-4 min-h-[40px] w-full text-xs"
-              value={typeof editData.family === 'string' ? editData.family : JSON.stringify(editData.family || '', null, 2)}
-              onChange={e => {
-                let val = e.target.value;
-                try {
-                  val = JSON.parse(val);
-                } catch { /* 無視 */ }
-                handleEditChange('family', val);
-              }}
-              rows={2}
-            />
-          ) : (
-            <div className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-800 rounded p-4 min-h-[40px]">
-              {character.family ? (
-                <pre className="whitespace-pre-wrap text-xs">{JSON.stringify(character.family, null, 2)}</pre>
-              ) : (
-                <span className="text-zinc-400">（家族構成なし）</span>
-              )}
             </div>
           )}
         </div>

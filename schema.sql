@@ -113,3 +113,14 @@ CREATE POLICY "User can update own profile" ON profiles
 -- 必要に応じてDELETEや他の操作も追加してください
 
 -- ※SupabaseのGUIでroleカラムをjwt()に含める設定が必要な場合があります
+
+
+-- =============================
+-- Storageバケット「images」用RLS設定について
+-- =============================
+-- StorageバケットのRLSはSupabaseのGUIまたはAPIで設定します。
+-- SQLで直接有効化はできませんが、ポリシーはSQLで追加できます。
+-- 具体的なSQL例は storage_rls_images.sql を参照してください。
+-- 例:
+--   - Public read (select): 誰でも画像取得可能
+--   - Authenticated write/delete: 認証ユーザーのみアップロード・削除可能

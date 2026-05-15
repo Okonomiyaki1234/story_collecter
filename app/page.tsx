@@ -1,4 +1,5 @@
 "use client";
+import Link from 'next/link';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { supabase } from '../lib/supabaseClient';
@@ -93,7 +94,11 @@ export default function Home() {
             <div className="text-center text-zinc-400 py-8">データがありません</div>
           ) : (
             stories.map((story) => (
-              <div key={story.id} className="flex items-center gap-4 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-4 shadow-sm">
+              <Link
+                key={story.id}
+                href={`/stories/${story.id}`}
+                className="flex items-center gap-4 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-4 shadow-sm hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
+              >
                 <div className="w-20 h-20 flex items-center justify-center bg-zinc-100 dark:bg-zinc-800 rounded overflow-hidden">
                   {story.image_url ? (
                     <img src={story.image_url} alt="story" className="object-cover w-full h-full" />
@@ -106,7 +111,7 @@ export default function Home() {
                   <div className="text-zinc-700 dark:text-zinc-300 text-sm mb-1">{story.summary}</div>
                   <div className="text-xs text-zinc-500 dark:text-zinc-400">状況: {story.status} ／ 開始時期（リアル）: {story.start_in_real}</div>
                 </div>
-              </div>
+              </Link>
             ))
           )}
         </div>
@@ -120,7 +125,11 @@ export default function Home() {
             <div className="text-center text-zinc-400 py-8">データがありません</div>
           ) : (
             characters.map((char) => (
-              <div key={char.id} className="flex items-center gap-4 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-4 shadow-sm">
+              <Link
+                key={char.id}
+                href={`/characters/${char.id}`}
+                className="flex items-center gap-4 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-4 shadow-sm hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
+              >
                 <div className="w-20 h-20 flex items-center justify-center bg-zinc-100 dark:bg-zinc-800 rounded overflow-hidden">
                   {char.image_url ? (
                     <img src={char.image_url} alt="character" className="object-cover w-full h-full" />
@@ -132,7 +141,7 @@ export default function Home() {
                   <div className="text-lg font-bold text-black dark:text-zinc-50">{char.name}</div>
                   <div className="text-xs text-zinc-500 dark:text-zinc-400">登場ストーリー: {char.stories.join(', ')}</div>
                 </div>
-              </div>
+              </Link>
             ))
           )}
         </div>
